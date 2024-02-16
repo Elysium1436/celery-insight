@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "celery-progress"
+version = "0.1.0"
+description = ""
+authors = ["Elysium1436 <bryan.af7@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+celery = "^5.3.6"
+redis = "^5.0.1"
+
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
