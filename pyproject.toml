@@ -6,7 +6,7 @@ authors = ["Elysium1436 <bryan.af7@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.10"
 celery = "^5.3.6"
 redis = "^5.0.1"
 
