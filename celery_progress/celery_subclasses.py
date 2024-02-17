@@ -1,7 +1,8 @@
-from .redis_utils import ChildTaskManager, ParentTaskManager, RedisTaskRepository
-from celery import current_task, Task
+
+from datetime import datetime
 import logging
-import datetime
+from celery import Task, current_task, uuid
+from .redis_utils import ChildTaskManager, RedisTaskRepository, ParentTaskManager
 
 class ChildTask(Task):
     """Task that stores it's id on the 'group' meta field"""
