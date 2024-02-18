@@ -4,6 +4,8 @@ import logging
 from celery import Task, current_task, uuid
 from .redis_utils import ChildTaskManager, RedisTaskRepository, ParentTaskManager
 
+logging.critical("INTIALIZLASKDJHF ASDGKLJSAHFDGLKASJHFGSKLHJL")
+
 class ChildTask(Task):
     """Task that stores it's id on the 'group' meta field"""
 

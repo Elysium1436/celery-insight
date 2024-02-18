@@ -107,7 +107,7 @@ class IndividualTaskManager:
     def update_task(self, task_metadata):
         self.redis_repo.update_task(self.task_id, task_metadata)
 
-
+"""
 @worker_ready.connect
 def on_worker_ready(sender, **kwargs):
     logging.info("Worker is ready. Checking if it's the first worker...")
@@ -136,3 +136,4 @@ def on_worker_ready(sender, **kwargs):
 def store_task_info(sender, result, **kwargs):
     task_id = sender.request.id
     result = AsyncResult(task_id)
+"""
