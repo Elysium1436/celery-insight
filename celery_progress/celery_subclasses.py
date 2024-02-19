@@ -2,7 +2,7 @@
 from datetime import datetime
 import logging
 from celery import Task, current_task, uuid
-from .redis_utils import ChildTaskManager, RedisTaskRepository, ParentTaskManager
+from .redis_utils import ChildTaskManager, RedisTaskRepository, ParentTaskManager, IndividualTaskManager
 
 logging.critical("INTIALIZLASKDJHF ASDGKLJSAHFDGLKASJHFGSKLHJL")
 
@@ -50,10 +50,33 @@ class ParentTask(Task):
         additional_metadata["state"] = task_result.state
         ParentTaskManager(task_result.id, RedisTaskRepository()).set_parent(additional_metadata)
 
+        return task_result
+
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
         update_metadata = {"state": status, "time_finished": datetime.now().isoformat()}
         if einfo:
             update_metadata["einfo"] = einfo
         ParentTaskManager(task_id, RedisTaskRepository()).update_parent(update_metadata)
+        
+        return super().after_return(status, retval, task_id, args, kwargs, einfo)
+
+
+class IndividualTask(Task):
+
+    def apply_async(self, cliente_id=None, task_name: str="Tarefa", amount_name: str="Iterações", args=None, kwargs=None, task_id=None, producer=None, link=None, link_error=None, shadow=None, **options):
+
+        additional_metadata = {"cliente_id": cliente_id, "task_name": task_name, "amount_name": amount_name, "time_deployed": datetime.now().isoformat(), "time_finished": None}
+        logging.info(additional_metadata)
+        task_result = super().apply_async(args, kwargs, task_id, producer, link, link_error, shadow)
+        
+        additional_metadata["state"] = task_result.state
+        IndividualTaskManager(task_result.id, RedisTaskRepository()).update_task(additional_metadata)
+        return super().apply_async(args, kwargs, task_id, producer, link, link_error, shadow, **options)
+
+    def after_return(self, status, retval, task_id, args, kwargs, einfo):
+        update_metadata = {"state": status, "time_finished": datetime.now().isoformat()}
+        if einfo:
+            update_metadata["einfo"] = einfo
+        IndividualTaskManager(task_id, RedisTaskRepository()).update_task(update_metadata)
         
         return super().after_return(status, retval, task_id, args, kwargs, einfo)
