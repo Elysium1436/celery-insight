@@ -4,7 +4,6 @@ import logging
 from celery import Task, current_task, uuid
 from .redis_utils import ChildTaskManager, RedisTaskRepository, ParentTaskManager, IndividualTaskManager
 
-logging.critical("INTIALIZLASKDJHF ASDGKLJSAHFDGLKASJHFGSKLHJL")
 
 class ChildTask(Task):
     """Task that stores it's id on the 'group' meta field"""
@@ -70,7 +69,7 @@ class IndividualTask(Task):
         task_result = super().apply_async(args, kwargs, task_id, producer, link, link_error, shadow)
         
         additional_metadata["state"] = task_result.state
-        IndividualTaskManager(task_result.id, RedisTaskRepository()).update_task(additional_metadata)
+        IndividualTaskManager(task_result.id, RedisTaskRepository()).set_task(additional_metadata)
         return super().apply_async(args, kwargs, task_id, producer, link, link_error, shadow, **options)
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
