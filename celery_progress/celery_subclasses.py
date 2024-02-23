@@ -70,7 +70,7 @@ class IndividualTask(Task):
         
         additional_metadata["state"] = task_result.state
         IndividualTaskManager(task_result.id, RedisTaskRepository()).set_task(additional_metadata)
-        return super().apply_async(args, kwargs, task_id, producer, link, link_error, shadow, **options)
+        return task_result
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
         update_metadata = {"state": status, "time_finished": datetime.now().isoformat()}
