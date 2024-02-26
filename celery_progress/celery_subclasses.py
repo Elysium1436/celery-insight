@@ -69,7 +69,7 @@ class IndividualTask(Task):
         task_result = super().apply_async(args, kwargs, task_id, producer, link, link_error, shadow)
         
         additional_metadata["state"] = task_result.state
-        IndividualTaskManager(task_result.id, RedisTaskRepository()).set_task(additional_metadata)
+        IndividualTaskManager(task_result.id, RedisTaskRepository()).update_task(additional_metadata)
         return task_result
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
