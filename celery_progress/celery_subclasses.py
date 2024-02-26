@@ -10,6 +10,7 @@ class ChildTask(Task):
 
     def apply_async(self, args=None, kwargs=None, task_id=None, producer=None, link=None, link_error=None, shadow=None, additional_metadata = None, **options):
 
+        additional_metadata = {"time_deployed": datetime.now().isoformat(), "time_finished": None}
         parent_id = current_task.request.id
 
         if parent_id is None:
@@ -39,9 +40,9 @@ class ChildTask(Task):
 class ParentTask(Task):
     """Task that stores it's id on the 'group' meta field"""
 
-    def apply_async(self, cliente_id=None, task_name: str="Tarefa Parente", args=None, kwargs=None, task_id=None, producer=None, link=None, link_error=None, shadow=None, amount_name: str= "Iterações", **options):
+    def apply_async(self, args=None, kwargs=None, task_id=None, producer=None, link=None, link_error=None, shadow=None, amount_name: str= "Iterações", **options):
 
-        additional_metadata = {"cliente_id": cliente_id, "task_name": task_name, "amount_name": amount_name, "time_deployed": datetime.now().isoformat(), "time_finished": None}
+        additional_metadata = {"time_deployed": datetime.now().isoformat(), "time_finished": None}
         logging.info(additional_metadata)
 
         task_result = super().apply_async(args, kwargs, task_id, producer, link, link_error, shadow)
@@ -62,14 +63,17 @@ class ParentTask(Task):
 
 class IndividualTask(Task):
 
-    def apply_async(self, cliente_id=None, task_name: str="Tarefa", amount_name: str="Iterações", args=None, kwargs=None, task_id=None, producer=None, link=None, link_error=None, shadow=None, **options):
+    def apply_async(self, metadata: dict = {}, args=None, kwargs=None, task_id=None, producer=None, link=None, link_error=None, shadow=None, **options):
 
-        additional_metadata = {"cliente_id": cliente_id, "task_name": task_name, "amount_name": amount_name, "time_deployed": datetime.now().isoformat(), "time_finished": None}
-        logging.info(additional_metadata)
+
+        additional_metadata = {"time_deployed": datetime.now().isoformat(), "time_finished": None}
+
+        metadata = metadata.copy()
+
         task_result = super().apply_async(args, kwargs, task_id, producer, link, link_error, shadow)
         
-        additional_metadata["state"] = task_result.state
-        IndividualTaskManager(task_result.id, RedisTaskRepository()).set_task(additional_metadata)
+        metadata["state"] = task_result.state
+        IndividualTaskManager(task_result.id, RedisTaskRepository()).set_task(metadata)
         return task_result
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):

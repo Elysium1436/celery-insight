@@ -24,7 +24,6 @@ class CeleryProgressContext:
 
 def task_progress_update(current_amount: int, total_amount: int = None):
 
-    logging.info("UPDATING TASK PROGRESS")
     if not CELERY_TASK_CONTEXT["celery_task"]:
         raise RuntimeError("CeleryProgresContext not initialized.")
 
@@ -39,7 +38,5 @@ def task_progress_update(current_amount: int, total_amount: int = None):
 
     if parent_id == task_id:
         IndividualTaskManager(task_id, RedisTaskRepository()).update_task(update_data)
-        logging.info("INDIVIDUAL TASK ENCOUNTERED")
     else:
         ChildTaskManager(parent_id, task_id, RedisTaskRepository()).update_child(update_data)
-        logging.info("INDIVIDUAL TASK ENCOUNTERED")

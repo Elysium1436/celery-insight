@@ -106,34 +106,3 @@ class IndividualTaskManager:
     
     def update_task(self, task_metadata):
         self.redis_repo.update_task(self.task_id, task_metadata)
-
-"""
-@worker_ready.connect
-def on_worker_ready(sender, **kwargs):
-    logging.info("Worker is ready. Checking if it's the first worker...")
-
-    # Create an inspector instance to query active workers
-    try:
-        inspector = Inspect(app=celery_app)
-
-        # Get the list of active workers
-        active_workers = inspector.active()
-        logging.info(f"{active_workers}")
-    except Exception as e:
-        logging.exception("yeet")
-        logging.info(e)
-    
-
-    # Check if the current worker is the only one
-    if active_workers is None:
-        logging.info("This is the first worker. Clearing Redis database...")
-        # Connect to Redis and clear the database
-        redis_client.flushdb()  # Warning: This clears the entire database!
-
-
-
-@task_success.connect
-def store_task_info(sender, result, **kwargs):
-    task_id = sender.request.id
-    result = AsyncResult(task_id)
-"""

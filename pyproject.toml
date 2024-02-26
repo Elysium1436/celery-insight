@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "celery-progress"
-version = "0.5.0"
+version = "0.6.0"
 description = ""
 authors = ["Elysium1436 <bryan.af7@gmail.com>"]
 readme = "README.md"
