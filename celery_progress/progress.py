@@ -36,10 +36,5 @@ def task_progress_update(current_amount: int, total_amount: int = None):
 
     task_id = celery_task.request.id
     parent_id = celery_task.request.parent_id
-
-    if parent_id == task_id:
-        IndividualTaskManager(task_id, RedisTaskRepository()).update_task(update_data)
-        logging.info("INDIVIDUAL TASK ENCOUNTERED")
-    else:
-        ChildTaskManager(parent_id, task_id, RedisTaskRepository()).update_child(update_data)
-        logging.info("INDIVIDUAL TASK ENCOUNTERED")
+    ChildTaskManager(parent_id, task_id, RedisTaskRepository()).update_child(update_data)
+    logging.info("INDIVIDUAL TASK ENCOUNTERED")
