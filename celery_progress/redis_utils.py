@@ -20,7 +20,7 @@ class RedisInitializer:
 
 class RedisTaskRepository:
     task_key = "CELERY_TASKS"
-    _redis_client = None  # Class-level attribute to cache the Redis client
+    _redis_client: redis.StrictRedis = None  # Class-level attribute to cache the Redis client
 
     def __init__(self, redis_url: str = None):
         if RedisTaskRepository._redis_client is None:
@@ -101,7 +101,8 @@ class IndividualTaskManager:
         self.task_id = task_id
         self.redis_repo = redis_repo
 
-    def set_task(self, task_metadata):
+    def set_task(self, task_metadata = {}):
+        task_metadata = deepcopy(task_metadata)
         self.redis_repo.set_task(self.task_id, task_metadata)
     
     def update_task(self, task_metadata):
