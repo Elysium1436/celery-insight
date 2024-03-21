@@ -13,6 +13,8 @@ redis = "^5.0.1"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.2"
+pytest = "^8.0.2"
+pytest-celery = "^0.0.0"
 
 [build-system]
 requires = ["poetry-core"]

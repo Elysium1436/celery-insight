@@ -3,12 +3,13 @@ from datetime import datetime
 import logging
 from celery import Task, current_task, uuid
 from .redis_utils import ChildTaskManager, RedisTaskRepository, ParentTaskManager, IndividualTaskManager
+import uuid
 
 
 class ChildTask(Task):
     """Task that stores it's id on the 'group' meta field"""
 
-    def apply_async(self, args=None, kwargs=None, task_id=None, producer=None, link=None, link_error=None, shadow=None, additional_metadata = None, **options):
+    def apply_async(self, total_amount, args=None, kwargs=None, task_id=None, producer=None, link=None, link_error=None, shadow=None, additional_metadata = None, **options):
 
         parent_id = current_task.request.id
 
@@ -16,14 +17,14 @@ class ChildTask(Task):
             raise RuntimeError("Need to be run inside a task context. Perhaps you're not running from the ParentTask class?")
         
         metadata = additional_metadata or {}
-        metadata["total_amount"] = len(args[0])
+        task_id = task_id or str(uuid.uuid4())
+        metadata["total_amount"] = total_amount
         metadata["current_amount"] = 0
         metadata["time_deployed"] = datetime.now().isoformat()
+        metadata["state"] = "PROGRESS"
+        ChildTaskManager(parent_id, task_id).update_child(metadata)
 
         task_result = super().apply_async(args, kwargs, task_id, producer, link, link_error, shadow)
-        metadata["state"] = task_result.state
-
-        ChildTaskManager(parent_id, task_result.id, RedisTaskRepository()).update_child(metadata)
 
         return task_result
 
@@ -32,22 +33,22 @@ class ChildTask(Task):
         parent_id = self.request.parent_id
         if einfo:
             update_metadata["einfo"] = einfo
-        ChildTaskManager(parent_id, task_id, RedisTaskRepository()).update_child(update_metadata)
+        ChildTaskManager(parent_id, task_id).update_child(update_metadata)
         
         return super().after_return(status, retval, task_id, args, kwargs, einfo)
 
 class ParentTask(Task):
     """Task that stores it's id on the 'group' meta field"""
 
-    def apply_async(self, cliente_id=None, task_name: str="Tarefa Parente", args=None, kwargs=None, task_id=None, producer=None, link=None, link_error=None, shadow=None, amount_name: str= "Iterações", **options):
+    def apply_async(self,  args=None, kwargs=None, task_id=None, producer=None, link=None, link_error=None, shadow=None, **options):
 
-        additional_metadata = {"cliente_id": cliente_id, "task_name": task_name, "amount_name": amount_name, "time_deployed": datetime.now().isoformat(), "time_finished": None}
-        logging.info(additional_metadata)
+
+        task_id = task_id or str(uuid.uuid4())
+        
+        additional_metadata = {"time_deployed": datetime.now().isoformat(), "state": "PROGRESS"}
+        ParentTaskManager(task_id).set_parent(additional_metadata)
 
         task_result = super().apply_async(args, kwargs, task_id, producer, link, link_error, shadow)
-        
-        additional_metadata["state"] = task_result.state
-        ParentTaskManager(task_result.id, RedisTaskRepository()).set_parent(additional_metadata)
 
         return task_result
 
@@ -55,27 +56,29 @@ class ParentTask(Task):
         update_metadata = {"state": status, "time_finished": datetime.now().isoformat()}
         if einfo:
             update_metadata["einfo"] = einfo
-        ParentTaskManager(task_id, RedisTaskRepository()).update_parent(update_metadata)
+        ParentTaskManager(task_id).update_parent(update_metadata)
         
         return super().after_return(status, retval, task_id, args, kwargs, einfo)
 
 
 class IndividualTask(Task):
 
-    def apply_async(self, cliente_id=None, task_name: str="Tarefa", amount_name: str="Iterações", args=None, kwargs=None, task_id=None, producer=None, link=None, link_error=None, shadow=None, **options):
+    def apply_async(self, total_amount,  args=None, kwargs=None, task_id=None, producer=None, link=None, link_error=None, shadow=None, **options):
 
-        additional_metadata = {"cliente_id": cliente_id, "task_name": task_name, "amount_name": amount_name, "time_deployed": datetime.now().isoformat(), "time_finished": None}
-        logging.info(additional_metadata)
-        task_result = super().apply_async(args, kwargs, task_id, producer, link, link_error, shadow)
-        
-        additional_metadata["state"] = task_result.state
-        IndividualTaskManager(task_result.id, RedisTaskRepository()).set_task(additional_metadata)
+        additional_metadata = {}
+        additional_metadata["state"] = "PROGRESS"
+        additional_metadata["time_deployed"] = datetime.now().isoformat()
+        additional_metadata["current_amount"] = 0
+        additional_metadata["total_amount"] = total_amount
+        task_id = task_id or str(uuid.uuid4())
+        IndividualTaskManager(task_id).set_task(additional_metadata)
+        task_result = super().apply_async(args, kwargs, task_id, producer, link, link_error, shadow, **options)
         return task_result
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
         update_metadata = {"state": status, "time_finished": datetime.now().isoformat()}
         if einfo:
             update_metadata["einfo"] = einfo
-        IndividualTaskManager(task_id, RedisTaskRepository()).update_task(update_metadata)
+        IndividualTaskManager(task_id).update_task(update_metadata)
         
         return super().after_return(status, retval, task_id, args, kwargs, einfo)

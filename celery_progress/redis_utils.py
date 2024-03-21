@@ -22,17 +22,23 @@ class RedisTaskRepository:
     task_key = "CELERY_TASKS"
     _redis_client: redis.StrictRedis = None  # Class-level attribute to cache the Redis client
 
-    def __init__(self, redis_url: str = None):
+    def __init__(self, redis_url: str = None, redis_client=None):
+        if redis_client:
+            self._inject_redis_client(redis_client)
+            return
         if RedisTaskRepository._redis_client is None:
             if redis_url is None:
                 raise RuntimeError("Redis client is not initialized and yet no url was given")
             RedisTaskRepository._initialize_redis_client(redis_url)
-        self.redis_client = RedisTaskRepository._redis_client
 
     @classmethod
     def _get_redis_client(cls):
         return cls._redis_client
 
+    @classmethod
+    def _inject_redis_client(cls, redis_client):
+        if cls._redis_client is None:
+            cls._redis_client = redis_client
 
     @classmethod
     def _initialize_redis_client(cls, redis_url: str):
@@ -42,7 +48,7 @@ class RedisTaskRepository:
 
     def set_task(self, task_id: str, metadata: dict):
         serialized_data = json.dumps(metadata)
-        self.redis_client.hset(self.task_key, task_id, serialized_data)
+        self._redis_client.hset(self.task_key, task_id, serialized_data)
 
     def update_task(self, task_id: str, metadata: dict):
         current_metadata = self.retrieve_specific_task_meta(task_id)
@@ -50,20 +56,20 @@ class RedisTaskRepository:
         self.set_task(task_id, current_metadata)
 
     def retrieve_specific_task_meta(self, task_id):
-        serialized_data = self.redis_client.hget(self.task_key, task_id).decode("utf-8")
+        serialized_data = self._redis_client.hget(self.task_key, task_id).decode("utf-8")
         return json.loads(serialized_data)
 
     def retrieve_all_tasks(self):
-        all_tasks = self.redis_client.hgetall(self.task_key)
+        all_tasks = self._redis_client.hgetall(self.task_key)
 
         tasks = {k.decode('utf-8'):json.loads(v.decode('utf-8')) for k, v in all_tasks.items()}
         return tasks
 
 
 class ParentTaskManager:
-    def __init__(self, parent_id, redis_repo: RedisTaskRepository):
+    def __init__(self, parent_id):
         self.parent_id = parent_id
-        self.redis_repo = redis_repo
+        self.redis_repo = RedisTaskRepository()
 
     def set_parent(self, parent_metadata: dict = {}):
         metadata = deepcopy(parent_metadata)
@@ -83,23 +89,29 @@ class ParentTaskManager:
         formatted_metadata = {"children_tasks": new_metadata}
         self.redis_repo.update_task(self.parent_id, formatted_metadata)
 
+    def get_parent(self) -> dict:
+        return self.redis_repo.retrieve_specific_task_meta(self.parent_id)
+
 
 class ChildTaskManager:
-    def __init__(self, parent_id, child_id, redis_repo: RedisTaskRepository):
+    def __init__(self, parent_id, child_id):
         self.child_id = child_id
-        self.parent_task_manager = ParentTaskManager(parent_id, redis_repo)
+        self.parent_task_manager = ParentTaskManager(parent_id)
 
     def set_child(self, child_metadata):
         self.parent_task_manager.set_child(self.child_id, child_metadata)
     
     def update_child(self, new_child_metadata):
         self.parent_task_manager.update_child(self.child_id, new_child_metadata)
+    
+    def get_task_metadata(self):
+        return self.parent_task_manager.get_parent()[self.child_id]
 
 
 class IndividualTaskManager:
-    def __init__(self, task_id, redis_repo: RedisTaskRepository):
+    def __init__(self, task_id):
         self.task_id = task_id
-        self.redis_repo = redis_repo
+        self.redis_repo = RedisTaskRepository()
 
     def set_task(self, task_metadata = {}):
         task_metadata = deepcopy(task_metadata)
@@ -107,6 +119,9 @@ class IndividualTaskManager:
     
     def update_task(self, task_metadata):
         self.redis_repo.update_task(self.task_id, task_metadata)
+    
+    def get_task_metdata(self):
+        return self.redis_repo.retrieve_specific_task_meta(self.task_id)
 
 """
 @worker_ready.connect
