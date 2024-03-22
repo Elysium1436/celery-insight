@@ -8,7 +8,7 @@ CELERY_TASK_CONTEXT = {"celery_task": None}
 
 
 class CeleryProgressContext:
-    def __init__(self, celery_task, additional_data: dict=None):
+    def __init__(self, celery_task):
         self.celery_task = celery_task
         logging.info(type(celery_task))
         
