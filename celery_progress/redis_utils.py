@@ -64,6 +64,10 @@ class RedisTaskRepository:
 
         tasks = {k.decode('utf-8'):json.loads(v.decode('utf-8')) for k, v in all_tasks.items()}
         return tasks
+    
+    def delete_all_tasks(self):
+        self._redis_client.delete(self.task_key)
+
 
 
 class ParentTaskManager:
