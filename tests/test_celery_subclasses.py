@@ -4,20 +4,6 @@ from celery_progress.redis_utils import ParentTaskManager, RedisTaskRepository, 
 from celery import Celery, Task, current_task
 from unittest.mock import patch, MagicMock
 
-
-@pytest.fixture
-def celery_app_task():
-    app = Celery('test')
-    app.conf.task_always_eager = True
-
-
-    @app.task(base=ParentTask)
-    def add(x,y):
-        print(x+y)
-        return x+y
-    
-    return app, add
-
     
 
 @patch.object(Task, 'apply_async', return_value="None")

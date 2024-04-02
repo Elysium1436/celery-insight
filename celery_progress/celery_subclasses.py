@@ -40,12 +40,11 @@ class ChildTask(Task):
 class ParentTask(Task):
     """Task that stores it's id on the 'group' meta field"""
 
-    def apply_async(self,  args=None, kwargs=None, task_id=None, producer=None, link=None, link_error=None, shadow=None, **options):
-
+    def apply_async(self,  args=None, kwargs=None, task_id=None, producer=None, link=None, link_error=None, shadow=None, additional_metadata=None **options):
 
         task_id = task_id or str(uuid.uuid4())
-        
-        additional_metadata = {"time_deployed": datetime.now().isoformat(), "state": "PROGRESS"}
+        additional_metadata = additional_metadata or {}
+        additional_metadata.update({"time_deployed": datetime.now().isoformat(), "state": "PROGRESS"})
         ParentTaskManager(task_id).set_parent(additional_metadata)
 
         task_result = super().apply_async(args, kwargs, task_id, producer, link, link_error, shadow)
@@ -63,9 +62,9 @@ class ParentTask(Task):
 
 class IndividualTask(Task):
 
-    def apply_async(self, total_amount,  args=None, kwargs=None, task_id=None, producer=None, link=None, link_error=None, shadow=None, **options):
+    def apply_async(self, total_amount,  args=None, kwargs=None, task_id=None, producer=None, link=None, link_error=None, shadow=None, additional_metadata=None, **options):
 
-        additional_metadata = {}
+        additional_metadata = additional_metadata or {}
         additional_metadata["state"] = "PROGRESS"
         additional_metadata["time_deployed"] = datetime.now().isoformat()
         additional_metadata["current_amount"] = 0
