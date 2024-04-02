@@ -1,4 +1,3 @@
-
 from .redis_utils import RedisTaskRepository, ChildTaskManager, IndividualTaskManager
 from .celery_subclasses import IndividualTask, ChildTask, ParentTask
 import logging
@@ -10,9 +9,7 @@ CELERY_TASK_CONTEXT = {"celery_task": None}
 class CeleryProgressContext:
     def __init__(self, celery_task):
         self.celery_task = celery_task
-        logging.info(type(celery_task))
         
-        logging.info(self.celery_task.request.headers)
 
     def __enter__(self):
         if not CELERY_TASK_CONTEXT["celery_task"]:
@@ -56,6 +53,7 @@ def task_progress_increment():
         metadata = IndividualTaskManager(celery_task.request.id).get_task_metdata()
         metadata["current_amount"] = metadata.get("current_amount", 0) + 1
         IndividualTaskManager(celery_task.request.id).update_task(metadata)
+
     if isinstance(celery_task, ChildTask):
         metadata = ChildTaskManager(celery_task.request.parent_id, celery_task.request.id).get_task_metadata()
         metadata["current_amount"] = metadata.get("current_amount", 0) + 1

@@ -40,7 +40,7 @@ class ChildTask(Task):
 class ParentTask(Task):
     """Task that stores it's id on the 'group' meta field"""
 
-    def apply_async(self,  args=None, kwargs=None, task_id=None, producer=None, link=None, link_error=None, shadow=None, additional_metadata=None **options):
+    def apply_async(self,  args=None, kwargs=None, task_id=None, producer=None, link=None, link_error=None, shadow=None, additional_metadata=None, **options):
 
         task_id = task_id or str(uuid.uuid4())
         additional_metadata = additional_metadata or {}

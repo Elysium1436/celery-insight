@@ -109,7 +109,8 @@ class ChildTaskManager:
         self.parent_task_manager.update_child(self.child_id, new_child_metadata)
     
     def get_task_metadata(self):
-        return self.parent_task_manager.get_parent()[self.child_id]
+        print(self.parent_task_manager.redis_repo.retrieve_all_tasks())
+        return self.parent_task_manager.get_parent()["children_tasks"][self.child_id]
 
 
 class IndividualTaskManager:
