@@ -21,7 +21,7 @@ class ChildTask(Task):
         metadata["total_amount"] = total_amount
         metadata["current_amount"] = 0
         metadata["time_deployed"] = datetime.now().isoformat()
-        metadata["state"] = "PROGRESS"
+        metadata["state"] = "PENDING"
         ChildTaskManager(parent_id, task_id).update_child(metadata)
 
         task_result = super().apply_async(args, kwargs, task_id, producer, link, link_error, shadow)
@@ -65,7 +65,7 @@ class IndividualTask(Task):
     def apply_async(self, total_amount,  args=None, kwargs=None, task_id=None, producer=None, link=None, link_error=None, shadow=None, additional_metadata=None, **options):
 
         additional_metadata = additional_metadata or {}
-        additional_metadata["state"] = "PROGRESS"
+        additional_metadata["state"] = "PENDING"
         additional_metadata["time_deployed"] = datetime.now().isoformat()
         additional_metadata["current_amount"] = 0
         additional_metadata["total_amount"] = total_amount

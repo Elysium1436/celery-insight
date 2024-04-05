@@ -39,7 +39,7 @@ def test_apply_child_task(mocked_update_child, mocked_apply_async, mocked_curren
     assert metadata["total_amount"] == 200
     assert metadata["current_amount"] == 0
     assert "time_deployed" in metadata
-    assert metadata["state"] == "PROGRESS"
+    assert metadata["state"] == "PENDING"
 
 
 
@@ -52,7 +52,7 @@ def test_apply_individual_task(update_task_mock, apply_async_mock, redis_repo):
     assert metadata["total_amount"] == 200
     assert metadata["current_amount"] == 0
     assert "time_deployed" in metadata
-    assert metadata["state"] == "PROGRESS"
+    assert metadata["state"] == "PENDING"
 
     apply_async_args = apply_async_mock.call_args[0]
     assert "1234" == apply_async_args[2]
